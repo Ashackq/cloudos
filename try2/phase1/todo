@@ -1,0 +1,5 @@
+1. comms over internet (find the best way for comms)
+2. security server side - metadata management over server
+3. partition management (intra partition metadata)
+4. scheduler and virtual mutex over partitions
+5. semaphores
