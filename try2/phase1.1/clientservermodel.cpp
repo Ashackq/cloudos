@@ -139,12 +139,41 @@ void writer(int client_id, const std::string &message)
     munmap(shared_memory_ptr, SHARED_MEMORY_SIZE);
     close(shm_fd);
 }
+void reader(int client_id)
+{
+    std::lock_guard<std::mutex> lock(mem_lock);
+    if (client_id < 0 || client_id >= MAX_CLIENTS)
+    {
+        std::cerr << "[Reader] Invalid client ID" << std::endl;
+        return;
+    }
 
+    int shm_fd = shm_open(SHARED_MEMORY_NAME, O_RDONLY, 0666);
+    if (shm_fd == -1)
+    {
+        std::cerr << "[Reader] Error opening shared memory" << std::endl;
+        return;
+    }
+
+    shared_memory_ptr = mmap(0, SHARED_MEMORY_SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+    if (shared_memory_ptr == MAP_FAILED)
+    {
+        std::cerr << "[Reader] Error mapping shared memory" << std::endl;
+        return;
+    }
+
+    metadata = static_cast<SharedMemoryMetadata *>(shared_memory_ptr);
+    char *partition_ptr = static_cast<char *>(shared_memory_ptr) + sizeof(SharedMemoryMetadata) + (client_id * PARTITION_SIZE);
+    std::cout << "[Reader] Client " << client_id << " read: " << partition_ptr << std::endl;
+
+    munmap(shared_memory_ptr, SHARED_MEMORY_SIZE);
+    close(shm_fd);
+}
 int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
-        std::cerr << "Usage: " << argv[0] << " <server|writer> [client_id] [message]" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <server|writer|reader> [client_id] [message]" << std::endl;
         return 1;
     }
 
@@ -158,6 +187,11 @@ int main(int argc, char *argv[])
         int client_id = std::stoi(argv[2]);
         std::string message = argv[3];
         writer(client_id, message);
+    }
+    else if (mode == "reader" && argc == 3)
+    {
+        int client_id = std::stoi(argv[2]);
+        reader(client_id);
     }
     else
     {
