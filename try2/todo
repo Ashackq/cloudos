@@ -1,0 +1,3 @@
+✅ Step 1: Detect Local Peers and Use Shared Memory
+⬜ Step 2: Establish Direct P2P TCP Connections
+⬜ Step 3: Improve the Messaging Protocol (ZeroMQ, WebRTC, or QUIC)

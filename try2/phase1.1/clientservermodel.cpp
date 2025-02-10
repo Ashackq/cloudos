@@ -8,6 +8,7 @@
 #include <mutex>
 #include <thread>
 #include <vector>
+#include <csignal>
 
 #define SHARED_MEMORY_NAME "p2p_shared_memory"
 #define SHARED_MEMORY_SIZE 4096 // Total memory size
@@ -25,6 +26,14 @@ struct SharedMemoryMetadata
 std::mutex mem_lock;
 void *shared_memory_ptr;
 SharedMemoryMetadata *metadata;
+
+void cleanup(int signum)
+{
+    std::cout << "\n[Server] Interrupt received. Cleaning up shared memory..." << std::endl;
+    munmap(shared_memory_ptr, SHARED_MEMORY_SIZE);
+    shm_unlink(SHARED_MEMORY_NAME);
+    exit(0);
+}
 
 void monitor_memory()
 {
@@ -48,6 +57,7 @@ void monitor_memory()
 
 void server()
 {
+    signal(SIGINT, cleanup);
     int shm_fd = shm_open(SHARED_MEMORY_NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1)
     {
@@ -169,6 +179,40 @@ void reader(int client_id)
     munmap(shared_memory_ptr, SHARED_MEMORY_SIZE);
     close(shm_fd);
 }
+
+void deregister_client(int client_id)
+{
+    std::lock_guard<std::mutex> lock(mem_lock);
+
+    bool found = false;
+    for (int i = 0; i < metadata->clients_connected; i++)
+    {
+        if (metadata->client_ids[i] == client_id)
+        {
+            found = true;
+            // Shift remaining clients in the array
+            for (int j = i; j < metadata->clients_connected - 1; j++)
+            {
+                metadata->client_ids[j] = metadata->client_ids[j + 1];
+            }
+            metadata->client_ids[metadata->clients_connected - 1] = -1;
+            metadata->clients_connected--;
+
+            // Free up partition space
+            metadata->used_size -= PARTITION_SIZE;
+            metadata->remaining_size += PARTITION_SIZE;
+
+            std::cout << "[Server] Client " << client_id << " deregistered and memory freed.\n";
+            break;
+        }
+    }
+
+    if (!found)
+    {
+        std::cerr << "[Server] Client " << client_id << " not found.\n";
+    }
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 2)
@@ -193,6 +237,12 @@ int main(int argc, char *argv[])
         int client_id = std::stoi(argv[2]);
         reader(client_id);
     }
+    else if (mode == "deregister" && argc == 3)
+    {
+        int client_id = std::stoi(argv[2]);
+        deregister_client(client_id);
+    }
+
     else
     {
         std::cerr << "Invalid usage." << std::endl;

@@ -53,6 +53,12 @@
     "xstring": "cpp",
     "xtr1common": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "vector": "cpp",
+    "csignal": "cpp",
+    "list": "cpp",
+    "string": "cpp",
+    "unordered_set": "cpp",
+    "xhash": "cpp"
   }
 }
