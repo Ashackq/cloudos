@@ -3,6 +3,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <jsoncpp/json/json.h>
+
 using namespace boost::asio;
 using namespace boost::beast;
 namespace http = boost::beast::http;
@@ -42,7 +43,20 @@ bool registerPeer(io_context &ioc, const std::string &id, const std::string &ip,
         http::response<http::dynamic_body> res;
         http::read(socket, buffer, res);
 
-        return res.result() == http::status::ok;
+        std::string response_body = boost::beast::buffers_to_string(res.body().data());
+        std::cout << "[Client] Server Response: " << response_body << std::endl;
+
+        // Check if response contains a valid client ID
+        if (res.result() == http::status::ok && !response_body.empty())
+        {
+            std::cout << "[Client] Successfully registered with ID: " << response_body << std::endl;
+            return true;
+        }
+        else
+        {
+            std::cerr << "[Client] Registration failed. Response: " << response_body << std::endl;
+            return false;
+        }
     }
     catch (std::exception &e)
     {
@@ -71,7 +85,10 @@ std::string fetchPeers(io_context &ioc)
         http::response<http::dynamic_body> res;
         http::read(socket, buffer, res);
 
-        return boost::beast::buffers_to_string(res.body().data());
+        std::string peer_list = boost::beast::buffers_to_string(res.body().data());
+        std::cout << "[Client] Fetched Peers: " << peer_list << std::endl;
+        
+        return peer_list;
     }
     catch (std::exception &e)
     {
@@ -88,6 +105,7 @@ int main()
     std::string peerIp = "192.168.1.100";
     std::string peerPort = "5000";
 
+    std::cout << "[Client] Registering peer..." << std::endl;
     if (registerPeer(ioc, peerId, peerIp, peerPort))
     {
         std::cout << "[Client] Successfully registered with discovery server!" << std::endl;
@@ -100,7 +118,11 @@ int main()
 
     std::cout << "[Client] Fetching peer list..." << std::endl;
     std::string peerList = fetchPeers(ioc);
-    std::cout << "[Client] Peers: " << peerList << std::endl;
+    
+    if (!peerList.empty())
+        std::cout << "[Client] Peers: " << peerList << std::endl;
+    else
+        std::cerr << "[Client] No peers found or request failed!" << std::endl;
 
     return 0;
 }

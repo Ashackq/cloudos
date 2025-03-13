@@ -1,0 +1,7 @@
+try2 
+phase1.1 => local shared memory
+phase1.2 => network reader and writer and server registration
+phase1.3 => peer connection and reader and writer
+phase1.4 => cpu
+phase1.5 => schedule
+phase1.6 => calculator in shared ram

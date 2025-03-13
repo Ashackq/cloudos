@@ -1,0 +1,7 @@
+[Server] Shared memory initialized.
+[Server] Initialized, listening on port 8080
+[Server] New client connected.
+[Server] Assigned Client ID: 1
+[Server] Assigned Client ID: 2
+[Server] Client ID: 2 requested peer list.
+[Server] Client 2 disconnected.
