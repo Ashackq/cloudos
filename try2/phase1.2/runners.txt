@@ -1,0 +1,2 @@
+g++ -o inter2 internetcons.cpp -pthread -lrt -ljsoncpp
+g++ cpppeer.cpp -ljsoncpp -o peerhai2

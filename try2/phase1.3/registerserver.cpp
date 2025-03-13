@@ -22,6 +22,7 @@
 std::mutex mem_lock;
 std::shared_mutex client_map_lock;
 std::map<int, std::string> client_data; // Stores ID -> IP mapping
+std::map<int, std::string> provider_data; // Stores ID -> {IP,port} mapping
 std::map<int, int> client_partitions;   // Stores ID -> Partition
 
 void logMessage(const std::string &message)
@@ -117,8 +118,27 @@ void handle_client(int client_sock)
 
         buffer[bytes_received] = '\0';
         std::string command(buffer);
+        if (command.find("register provider") == 0)
+        {
+            std::string provider_port_str = command.substr(18); // Extract the port number
+            if (!provider_port_str.empty() && std::all_of(provider_port_str.begin(), provider_port_str.end(), ::isdigit))
+            {
+                int provider_port = std::stoi(provider_port_str);
+                logMessage("[Server] Registered provider at " + client_ip + ":" + std::to_string(provider_port));
+                
+                // Store provider info in client_data using a negative ID to distinguish from normal clients
+                int provider_id = (provider_data.size() + 1);
+                provider_data[client_id] = client_ip +":"+ std::to_string(provider_port);
+                // saveClientData();
 
-        if (command.find("register") == 0)
+                send(client_sock, "Provider registered successfully", 32, 0);
+            }
+            else
+            {
+                send(client_sock, "Invalid provider registration", 29, 0);
+            }
+        }
+        else if (command.find("register") == 0)
         {
             if (command.size() > 9)  // Ensure the string is long enough
             {
@@ -174,19 +194,25 @@ void handle_client(int client_sock)
                     send(client_sock,mess.c_str() , mess.size(), 0);
                     continue;
                 }
-
-                std::string peer_list = "[";
-                std::shared_lock<std::shared_mutex> lock(client_map_lock);
-                for (const auto &[id, _] : client_data)
+                else
                 {
-                    if (id != client_id)
-                        peer_list += std::to_string(id) + ",";
-                }
-                if (peer_list.back() == ',')
-                    peer_list.pop_back();
-                peer_list += "]";
+                    if (provider_data.empty())
+                    {
+                        send(client_sock, "No providers available", 23, 0);
+                    }
+                    else
+                    {
+                        auto first_provider = provider_data.begin();
+                        int first_id = first_provider->first;
+                        std::string first_value = first_provider->second;
+                        
+                        std::cout << "First Provider ID: " << first_id << "\n";
+                        std::cout << "First Provider Data: " << first_value << "\n";
+                        std::string response =  provider_data[first_id];
+                        send(client_sock, response.c_str(), response.size(), 0);
+                    }
 
-                send(client_sock, peer_list.c_str(), peer_list.size(), 0);
+                }
             }
             else {
                 logMessage("[Server] Invalid ID request.");
@@ -267,24 +293,8 @@ void server()
 }
 
 
-int main(int argc, char *argv[])
+int main()
 {
-    if (argc < 2)
-    {
-        std::cerr << "Usage: " << argv[0] << " <server>" << std::endl;
-        return 1;
-    }
-
-    std::string mode = argv[1];
-    if (mode == "server")
-    {
-        server();
-    }
-    else
-    {
-        std::cerr << "Invalid usage." << std::endl;
-        return 1;
-    }
-
+    server();
     return 0;
 }

@@ -49,17 +49,34 @@ void registerClient()
     int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
     if (bytes_received > 0)
     {
-        buffer[bytes_received] = '\0';
-        if (std::string(buffer).find("Invalid") != std::string::npos)
+        buffer[bytes_received] = '\0';  // Null-terminate
+
+        std::string response(buffer);
+
+        if (response.find("Invalid") != std::string::npos) // FIXED CONDITION
         {
             std::cerr << "[Client] Invalid ID, requesting new one..." << std::endl;
             sendToServer("register");
             recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+            buffer[bytes_received] = '\0';  // Null-terminate again
+            client_id = std::stoi(buffer);
+            std::cout << "[Client] Registered with ID: " << client_id << std::endl;
+            return;
         }
-        client_id = std::stoi(buffer);
-        std::cout << "[Client] Registered with ID: " << client_id << std::endl;
+
+        if (response.find("Welcome") != std::string::npos) // FIXED CONDITION
+        {
+            std::cout << "[Client] Welcome Back From Server: " << buffer << std::endl;
+        }
+        else{
+
+            client_id = std::stoi(buffer);
+            std::cout << "[Client] Registered with ID: " << client_id << std::endl;
+        }
+        std::cout << "[Client] Let's Go!" << std::endl;
     }
 }
+
 
 
 void requestPeerList()
@@ -92,8 +109,7 @@ void signalHandler(int signum)
 
 int main(int argc, char *argv[])
 {
-    int client_id = (argc == 2) ? std::stoi(argv[1]) : -1;
-    
+    client_id = (argc == 2) ? std::stoi(argv[1]) : -1;
     signal(SIGINT, signalHandler); // Handle Ctrl+C
 
     client_socket = socket(AF_INET, SOCK_STREAM, 0);

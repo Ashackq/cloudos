@@ -1,7 +1,31 @@
-[Server] Shared memory initialized.
+[Server] Welcome back Client 1
+[Server] Welcome back Client 1
+[Server] Unregistered client requested peer list.
 [Server] Initialized, listening on port 8080
-[Server] New client connected.
-[Server] Assigned Client ID: 1
+[Server] Initialized, listening on port 8080
+[Server] Welcome back Client 1
+[Server] Unregistered client requested peer list.
+[Server] Client -1 disconnected.
+[Server] Unregistered client requested peer list.
+[Server] Client -1 disconnected.
+[Server] Welcome back Client 1
+[Server] Unregistered client requested peer list.
+[Server] Client -1 disconnected.
+[Server] Initialized, listening on port 8080
+[Server] Welcome back Client 1
+[Server] Initialized, listening on port 8080
+[Server] Initialized, listening on port 8080
+[Server] Welcome back Client 1
+[Server] Client 1 disconnected.
+[Server] Welcome back Client 1
+[Server] Initialized, listening on port 8080
+[Server] Initialized, listening on port 8080
 [Server] Assigned Client ID: 2
-[Server] Client ID: 2 requested peer list.
-[Server] Client 2 disconnected.
+[Server] Client unexpectedly disconnected.
+[Server] Assigned Client ID: 3
+[Server] Initialized, listening on port 8080
+[Server] Initialized, listening on port 8080
+[Server] Client unexpectedly disconnected.
+[Server] Welcome back Client 1
+1
+1
