@@ -1,4 +1,5 @@
 try2 
+phase1 1 peer => 1 peer
 phase1.1 => local shared memory
 phase1.2 => network reader and writer and server registration
 phase1.3 => peer connection and reader and writer
